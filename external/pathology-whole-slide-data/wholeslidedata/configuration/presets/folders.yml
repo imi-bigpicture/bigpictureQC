@@ -1,0 +1,23 @@
+default:
+    image_sources@replace(true):
+        "*object": sourcelib.collect.get_files_from_folder
+        file_cls: ${$wholeslidedata.data.files.WholeSlideImageFile}
+        mode: ${mode}
+        folder: /input/
+        filters: []
+        excludes: []
+        image_backend: ${image_backend}
+
+    annotation_sources@replace(true):
+        "*object": sourcelib.collect.get_files_from_folder
+        file_cls: ${$wholeslidedata.data.files.WholeSlideAnnotationFile}
+        mode: ${mode}
+        folder: /input/
+        filters: []
+        excludes: []
+        annotation_parser: ${annotation_parser}
+
+    associations@replace(true):
+        "*object": sourcelib.associations.associate_files
+        files1: ${image_sources}
+        files2: ${annotation_sources}

@@ -1,0 +1,2 @@
+# DigitalPathology
+Computational pathology library.

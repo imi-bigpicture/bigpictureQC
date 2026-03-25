@@ -1,0 +1,27 @@
+
+default:
+  seed: 123
+
+  annotation_parser@replace(true): 
+      "*object": wholeslidedata.annotation.parser.MaskAnnotationParser
+      processing_spacing: 4.0
+      
+  labels: 
+      tissue: 1
+      
+  annotation_sampler_name: OrderedAnnotationSampler
+  
+  point_sampler_name: TopLeftPointSampler
+
+  patch_sampler:
+      center: False
+
+  patch_label_sampler_name: MaskPatchLabelSampler
+  patch_label_sampler:
+      image_backend: 'asap'
+      ratio: 1.0
+      center: False
+      relative: False
+  
+  batch_shape:
+      batch_size: 1

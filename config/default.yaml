@@ -1,0 +1,250 @@
+# ==============================================================================
+# BigPictureQC Training Configuration Reference
+# ==============================================================================
+# This file contains ALL possible configuration parameters with explanations.
+# Copy and modify this file to create your own training configurations.
+# ==============================================================================
+
+# Seed for reproducibility
+seed: 42
+
+# ==============================================================================
+# Model Configuration
+# ==============================================================================
+model_config:
+  # Architecture type. Supported values:
+  # - 'unet', 'unetplusplus', 'manet', 'linknet', 'fpn'
+  # - 'pspnet', 'pan', 'deeplabv3', 'deeplabv3plus'
+  architecture: 'unetplusplus'
+  
+  # Encoder backbone name from timm/segmentation_models_pytorch
+  # Examples: 'resnet34', 'resnet50', 'efficientnet-b2', 'efficientnet-b4'
+  # 'resnext50_32x4d', 'se_resnext50_32x4d', 'densenet121', etc.
+  encoder_name: 'efficientnet-b2'
+  
+  # Pretrained weights for encoder
+  # Options: 'imagenet', 'imagenet+5k', 'advprop', 'noisy-student', null (random init)
+  encoder_weights: 'imagenet'
+  
+  # List of artifact classes to detect
+  # Available classes: 'Background', 'Tissue folds', 'Ink', 'Air bubbles', 
+  #                   'Dust', 'Marker', 'Out-of-focus'
+  classes:
+    - 'Tissue folds'
+    - 'Ink'
+    - 'Air bubbles'
+    - 'Dust'
+    - 'Marker'
+    - 'Out-of-focus'
+  
+  # Use batch normalization in decoder (only for architectures that support it)
+  use_batchnorm: true
+  
+  # Batch processing for loss computation (set to true for batch-wise loss)
+  batch: true
+  
+  # Device to use for training ('cuda' or 'cpu')
+  device: 'cuda'
+  
+  # Auxiliary classification head parameters (optional)
+  # If not needed, comment out or set to null
+  aux_params:
+    pooling: 'max'      # Global pooling type: 'avg' or 'max'
+    dropout: 0.4        # Dropout rate before classification layer
+    activation: 'sigmoid'  # Activation for auxiliary head
+    classes: 7          # Should match number of classes (auto-computed if not set)
+
+# ==============================================================================
+# Data Configuration
+# ==============================================================================
+data_config:
+  # Path to training CSV file with columns: 'path' (image), 'target' (mask)
+  train_data: 'data/train.csv'
+  
+  # Path to validation CSV file
+  valid_data: 'data/valid.csv'
+  
+  # Batch size for training
+  batch_size: 16
+  
+  # Batch size for validation 
+  valid_batch_size: 8
+  
+  # Number of data loading workers (0 = load in main process)
+  workers: 4
+  
+  # Patch/tile size (height and width)
+  patch_size: 512
+  
+  # Augmentation preset to use
+  # Options: 'basic', 'light', 'medium', 'moderate', 'artifact'
+  transform: 'artifact'
+  
+  # Image normalization strategy
+  # Options: 'simple' (divide by 255), 'inception' ([-1,1] range), 
+  #          'imagenet' (ImageNet stats), null (no normalization)
+  normalize: 'imagenet'
+  
+  # Limit training samples per epoch (null = use full dataset)
+  # Useful for quick iterations or when dataset is very large
+  train_samples_per_epoch: null
+  
+  # Limit validation samples per epoch (null = use full dataset)
+  valid_samples_per_epoch: null
+
+# ==============================================================================
+# Batch Iterator Configuration (for on-the-fly patch extraction)
+# ==============================================================================
+# Only used when train_config.on_the_fly = true
+batch_iterator_config:
+  # Path to WholeSlideData user config YAML
+  user_config_path: 'config/wsd_train.yml'
+  
+  # Path to validation config (defaults to user_config_path if not specified)
+  val_config_path: 'config/wsd_val.yml'
+  
+  # Number of batches per training epoch
+  train_batches: 1000
+  
+  # Number of batches per validation epoch
+  valid_batches: 100
+
+# ==============================================================================
+# Loss Configuration
+# ==============================================================================
+loss_config:
+  # Loss function type
+  # Options: 'dice_loss', 'generalized_dice'
+  loss_type: 'dice_loss'
+  
+  # Weight for segmentation loss in combined loss
+  # total_loss = (1 - loss_weight) * clf_loss + loss_weight * seg_loss
+  # Range: [0.0, 1.0]. Use 1.0 for segmentation-only, 0.0 for classification-only
+  loss_weight: 0.8
+
+# ==============================================================================
+# Training Configuration
+# ==============================================================================
+train_config:
+  # Number of training epochs
+  epochs: 100
+  
+  # Optimizer type
+  # Options: 'adam', 'adamw', 'rmsprop'
+  optimizer_type: 'adam'
+  
+  # Learning rate 
+  lr: 0.0001
+  
+  # Weight decay (L2 regularization)
+  weight_decay: 0.0001
+  
+  # Gradient accumulation steps (effective batch size = batch_size * accumulation_steps)
+  accumulation_steps: 1
+  
+  # Enable Automatic Mixed Precision (AMP) for faster training
+  amp: false
+  
+  # Gradient clipping max norm (0.0 = no clipping)
+  grad_clip: 0.0
+  
+  # Use on-the-fly patch extraction with WholeSlideData
+  # If false, uses pre-extracted patches from CSV files
+  on_the_fly: false
+  
+  # Enable early stopping
+  early_stopping: true
+  
+  # Metric to monitor for model selection and early stopping
+  # Should match one of the metric names in the 'metrics' section
+  valid_metric: 'dice_score'
+  
+  # Path to base model checkpoint for fine-tuning (optional)
+  # Use this to load pretrained weights before training starts
+  finetune_from: null  # e.g., 'weights/ihc_pretrained_model.pth'
+  
+  # Rounding threshold for binary predictions (0.0-1.0)
+  rounding: 0.5
+
+# ==============================================================================
+# Scheduler Configuration
+# ==============================================================================
+scheduler_config:
+  # Learning rate scheduler type
+  # Options: 'steplr', 'cosine', 'warmup_cosine'
+  # - steplr: Step decay every step_size epochs
+  # - cosine: Cosine annealing over all epochs
+  # - warmup_cosine: Linear warmup + cosine annealing
+  type: 'cosine'
+  
+  # Step size for StepLR (only used if type = 'steplr')
+  step_size: 15
+  
+  # Minimum learning rate for cosine schedulers
+  eta_min: 0.000001
+  
+  # Number of warmup epochs (only used if type = 'warmup_cosine')
+  warmup_epochs: 5
+
+# ==============================================================================
+# Metrics Configuration
+# ==============================================================================
+# List of metrics to compute during training and validation
+# Each metric has: name, type, and mode
+metrics:
+  - name: 'dice_score'          # Dice coefficient (stateful, accumulated)
+    type: 'segmentation'        # Type: 'segmentation' or 'classification'
+    mode: 'max'                 # Optimization direction: 'max' or 'min'
+  
+  - name: 'dice_smp'            # Dice from segmentation_models_pytorch
+    type: 'segmentation'
+    mode: 'max'
+  
+  - name: 'iou_smp'             # Intersection over Union
+    type: 'segmentation'
+    mode: 'max'
+  
+  - name: 'dice_loss'           # Dice loss as a metric
+    type: 'segmentation'
+    mode: 'min'
+  
+  - name: 'generalized_dice'    # Generalized Dice loss as a metric
+    type: 'segmentation'
+    mode: 'min'
+  
+  - name: 'cross_entropy'       # Binary cross-entropy for classification head
+    type: 'classification'
+    mode: 'min'
+  
+  - name: 'accuracy'            # Pixel-wise accuracy
+    type: 'segmentation'
+    mode: 'max'
+
+# ==============================================================================
+# Directory Configuration
+# ==============================================================================
+directories:
+  # Directory to save model checkpoints
+  checkpoint_dir: 'checkpoints/'
+  
+  # Base name for checkpoint files (will append .pth and suffixes)
+  checkpoint_name: 'artifact_model'
+
+# ==============================================================================
+# Weights & Biases (W&B) Configuration
+# ==============================================================================
+wandb_config:
+  # Enable W&B logging
+  enable: false
+  
+  # W&B project name
+  project: 'bigpicture-qc'
+  
+  # W&B username/entity
+  username: 'your-username'
+  
+  # Experiment name (will append fold number if doing cross-validation)
+  exp_name: 'artifact_detection_exp'
+  
+  # Local directory for W&B files
+  dir: './wandb/'

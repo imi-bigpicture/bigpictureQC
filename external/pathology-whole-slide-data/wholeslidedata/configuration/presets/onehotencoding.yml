@@ -1,0 +1,7 @@
+default:
+  batch_shape:
+    labels: ${_labels}
+
+  sample_callbacks:
+      - "*object": wholeslidedata.samplers.callbacks.OneHotEncodingSampleCallback
+        labels: ${_labels}

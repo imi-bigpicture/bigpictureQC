@@ -1,0 +1,11 @@
+concurrentbuffer>=0.0.8
+dicfg==0.0.13
+sourcelib>=0.0.4
+numpy>=1.23.4
+opencv-python-headless>=4.6.0.66
+shapely>=1.7.1
+PyYAML>=6.0
+rtree>=1.0.0
+matplotlib>=3.6.2
+scikit-image>=0.19.3
+lxml>=4.6.3
