@@ -12,7 +12,7 @@ MODEL_PATH="/home/user/weights/playground_soft-cloud-137_best_model.pth"
 
 if [[ "$MODE" == "folder" ]]; then
   mkdir -p "$TB_OUTPUT"
-  OUTPUT_PATH="$TB_OUTPUT/{image}_tissue.tif"
+  OUTPUT_PATH="$TB_OUTPUT/{image}${TB_SUFFIX}.tif"
   FILTER_ARG=(--input_filter "$INPUT_FILTER")
 else
   mkdir -p "$(dirname "$TB_OUTPUT")"
@@ -38,6 +38,7 @@ echo "[TB] DICOM       = $DICOM"
 
 exec /usr/local/bin/python3 /home/user/source/pathology-fast-inference/scripts/applynetwork_multiproc.py \
   --input_wsi_path="$INPUT_PATH" \
+  --spacing_tolerance="${SPACING_TOLERANCE:-0.25}" \
   "${FILTER_ARG[@]}" \
   "${DICOM_ARG[@]}" \
   "${RECURSIVE_ARG[@]}" \

@@ -17,7 +17,7 @@ class async_wsi_reader(Process):
     def __init__(self, input_wsi_path, output_filename, read_tile_queue, network_info, tile_size, output_shape,
                  mask_wsi_path=None, spacing=0, mask_spacing=None, mask_class=1, batch_size=8, preprocess_function=None,
                  writer_sequence_nr=0, cache_path=None, verbose=False, lookup_table_path=None,
-                 error_queue=None):
+                 error_queue=None, spacing_tolerance=0.25):
         Process.__init__(self, name='TileReader')
         self.daemon = True
         self._input_wsi = None
@@ -41,6 +41,7 @@ class async_wsi_reader(Process):
         self._cache_path = cache_path
         self._verbose = verbose
         self._error_queue = error_queue
+        self._spacing_tolerance = spacing_tolerance
 
     def get_lookup_table(self, lut_path):
         if os.path.exists(lut_path):
@@ -320,7 +321,7 @@ class async_wsi_reader(Process):
         self._queue.put(('finish_image', self._output_filename, sequence_nr, self._writer_sequence_nr))
 
     def _set_wsi_vars(self):
-        self._input_wsi = dptimagereader.ImageReader(image_path=self._input_wsi_path, cache_path=self._cache_path)
+        self._input_wsi = dptimagereader.ImageReader(image_path=self._input_wsi_path, cache_path=self._cache_path, spacing_tolerance=self._spacing_tolerance)
         input_level = self._input_wsi.level(spacing=self._spacing)
         self._tile_downsampling = self._input_wsi.downsamplings[input_level]
 

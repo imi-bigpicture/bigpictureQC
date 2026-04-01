@@ -12,12 +12,16 @@ DICOM=0
 POSTPROCESS=0
 USE_TTA=0
 RECURSIVE=0
+SKIP_TB=0
+SKIP_ART=0
+TB_SUFFIX="_tissue"
+SPACING_TOLERANCE="0.25"
 INPUT_FILTER="$DEFAULT_INPUT_FILTER"
 
 usage() {
   cat <<EOF
 Usage:
-  run_inference.sh [--dicom] [--postprocess] [--use_tta] [--recursive] [--input_filter REGEX] [INPUT_PATH [TB_OUTPUT ART_OUTPUT]]
+  run_inference.sh [--dicom] [--postprocess] [--use_tta] [--recursive] [--skip-tb] [--skip-art] [--tb_suffix SUFFIX] [--spacing_tolerance FLOAT] [--input_filter REGEX] [INPUT_PATH [TB_OUTPUT ART_OUTPUT]]
 
 Modes:
   - If INPUT_PATH is a file -> single mode
@@ -47,6 +51,14 @@ while [[ $# -gt 0 ]]; do
       USE_TTA=1; shift ;;
     --recursive)
       RECURSIVE=1; shift ;;
+    --skip-tb)
+      SKIP_TB=1; shift ;;
+    --skip-art)
+      SKIP_ART=1; shift ;;
+    --tb_suffix)
+      TB_SUFFIX="$2"; shift 2 ;;
+    --spacing_tolerance)
+      SPACING_TOLERANCE="$2"; shift 2 ;;
     --input_filter)
       INPUT_FILTER="$2"; shift 2 ;;
     -h|--help)
@@ -88,9 +100,22 @@ echo "[RUN] DICOM        = $DICOM"
 echo "[RUN] POSTPROCESS  = $POSTPROCESS"
 echo "[RUN] USE_TTA      = $USE_TTA"
 echo "[RUN] RECURSIVE    = $RECURSIVE"
-echo "[RUN] INPUT_FILTER = $INPUT_FILTER"
+echo "[RUN] SKIP_TB      = $SKIP_TB"
+echo "[RUN] SKIP_ART     = $SKIP_ART"
+echo "[RUN] TB_SUFFIX         = $TB_SUFFIX"
+echo "[RUN] SPACING_TOLERANCE = $SPACING_TOLERANCE"
+echo "[RUN] INPUT_FILTER      = $INPUT_FILTER"
 
-export INPUT_PATH TB_OUTPUT ART_OUTPUT MODE DICOM POSTPROCESS USE_TTA RECURSIVE INPUT_FILTER
+export INPUT_PATH TB_OUTPUT ART_OUTPUT MODE DICOM POSTPROCESS USE_TTA RECURSIVE SKIP_TB SKIP_ART TB_SUFFIX SPACING_TOLERANCE INPUT_FILTER
 
-/home/user/generate_tb_mask.sh
-/home/user/generate_artifact_mask.sh
+if [[ "$SKIP_TB" == "0" ]]; then
+  /home/user/generate_tb_mask.sh
+else
+  echo "[RUN] Skipping tissue segmentation (--skip-tb)"
+fi
+
+if [[ "$SKIP_ART" == "0" ]]; then
+  /home/user/generate_artifact_mask.sh
+else
+  echo "[RUN] Skipping artifact detection (--skip-art)"
+fi

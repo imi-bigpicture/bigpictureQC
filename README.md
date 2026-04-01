@@ -104,13 +104,17 @@ docker run --rm --gpus all \
 | `--dicom` | Treat each subfolder as one DICOM case; pick one `.dcm` per subfolder |
 | `--postprocess` | Apply region filtering and hole filling after artifact inference |
 | `--use_tta` | Test-time augmentation for artifact inference |
+| `--skip-tb` | Skip tissue segmentation (use when tissue masks already exist) |
+| `--skip-art` | Skip artifact inference (use when only tissue masks are needed) |
+| `--tb_suffix SUFFIX` | Suffix appended to the slide name for tissue mask files (default: `_tissue`) |
+| `--spacing_tolerance FLOAT` | Relative tolerance for matching WSI resolution levels (default: `0.25`); increase if slides are skipped with a spacing mismatch warning |
 | `--input_filter REGEX` | Override default file filter (default: `.*\.(tif\|tiff\|svs\|mrxs\|ndpi\|scn\|vms\|vmu\|bif)$`) |
 
 ## 📊 Outputs
 
 | Path | Description |
 |---|---|
-| `/outputs/tissue/{image}_tissue.tif` | Binary tissue mask |
+| `/outputs/tissue/{image}_tissue.tif` | Binary tissue mask (suffix configurable via `--tb_suffix`) |
 | `/outputs/artifacts/{image}_artifact.tif` | Multi-class artifact mask |
 | `/outputs/artifacts/artifact_quality_metrics.yaml` | Per-slide quality metrics |
 

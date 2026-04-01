@@ -21,7 +21,7 @@ class async_wsi_consumer:
                  lookup_table_path=None,
                  encoder_name_artifact='tu-convnext_base', encoder_weights_artifact='imagenet',
                  decoder_name_artifact='deeplabv3plus',
-                 error_queue=None, postprocess=False, use_tta=False):
+                 error_queue=None, postprocess=False, use_tta=False, spacing_tolerance=0.25):
         set_start_method(method='spawn')
 
         self._model_path = model_path
@@ -69,6 +69,7 @@ class async_wsi_consumer:
         self._error_queue = error_queue
         self.postprocess = postprocess
         self.use_tta = use_tta
+        self._spacing_tolerance = spacing_tolerance
 
     def _start_error_monitor(self, error_queue):
         """
@@ -174,11 +175,12 @@ class async_wsi_consumer:
                               preprocess_function=self._normalizer,
                               writer_sequence_nr=writer_sequence_nr,
                               verbose=self._verbose,
-                              error_queue=self._error_queue)
+                              error_queue=self._error_queue,
+                              spacing_tolerance=self._spacing_tolerance)
         reader.start()
 
     def _init_reader_vars(self, input_path, output_path):
-        input_wsi = dptimagereader.ImageReader(image_path=input_path)
+        input_wsi = dptimagereader.ImageReader(image_path=input_path, spacing_tolerance=self._spacing_tolerance)
         read_spacing = input_wsi.refine(spacing=self._read_spacing)
         read_level = input_wsi.level(spacing=self._read_spacing)
         write_level = input_wsi.level(spacing=self._write_spacing)

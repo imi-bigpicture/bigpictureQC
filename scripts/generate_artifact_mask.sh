@@ -13,7 +13,7 @@ MODEL_PATH="/home/user/weights/artifact_network_unet++_efficientnetb2.pth"
 if [[ "$MODE" == "folder" ]]; then
   mkdir -p "$ART_OUTPUT"
   OUTPUT_PATH="$ART_OUTPUT/{image}_artifact.tif"
-  MASK_PATH="$TB_OUTPUT/{image}_tissue.tif"
+  MASK_PATH="$TB_OUTPUT/{image}${TB_SUFFIX}.tif"
   FILTER_ARG=(--input_filter "$INPUT_FILTER")
 else
   mkdir -p "$(dirname "$ART_OUTPUT")"
@@ -50,7 +50,7 @@ MASK_CLASS=""
 
 if [[ "$MODE" == "folder" ]]; then
   # detect from the first tissue mask in the output folder
-  FIRST_MASK="$(find "$TB_OUTPUT" -type f \( -name "*_tissue.tif" -o -name "*.tif" \) | head -n 1)"
+  FIRST_MASK="$(find "$TB_OUTPUT" -type f -name "*${TB_SUFFIX}.tif" -print -quit)"
   if [[ -z "${FIRST_MASK:-}" ]]; then
     echo "[ART] ERROR: could not find any tissue mask in $TB_OUTPUT" >&2
     exit 1
@@ -64,6 +64,7 @@ echo "[ART] MASK_CLASS  = $MASK_CLASS"
 
 /usr/local/bin/python3 /home/user/source/pathology-fast-inference/scripts/applynetwork_multiproc.py \
   --input_wsi_path="$INPUT_PATH" \
+  --spacing_tolerance="${SPACING_TOLERANCE:-0.25}" \
   "${FILTER_ARG[@]}" \
   "${DICOM_ARG[@]}" \
   --mask_wsi_path="$MASK_PATH" \

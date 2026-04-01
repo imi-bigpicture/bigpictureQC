@@ -263,6 +263,7 @@ def collect_arguments():
                                  help='local directory to write to. Once finished will move the WSI to the output folder')
     argument_parser.add_argument('--unfix_network', action='store_true', help='removes the input dimensions constraint from the network')
     argument_parser.add_argument('--quantize', action='store_true', help='quantize float32 result to int8 [0, 255]')
+    argument_parser.add_argument('--spacing_tolerance', type=float, default=0.25, help='relative tolerance for matching WSI resolution levels')
     argument_parser.add_argument('--overwrite', action='store_true', help='overwrite existing results')
     argument_parser.add_argument('--touch', action='store_true', help='touch target output files first')
     argument_parser.add_argument('--verbose', action='store_true', help='verbose print statements')
@@ -420,7 +421,8 @@ def main():
                                                       encoder_weights_artifact=arguments['encoder_weights_artifact'],
                                                       decoder_name_artifact=arguments['decoder_name_artifact'], 
                                                       postprocess=arguments['postprocess'],
-                                                      use_tta=arguments['use_tta'])
+                                                      use_tta=arguments['use_tta'],
+                                                      spacing_tolerance=arguments['spacing_tolerance'])
     print("Model path:", arguments['model_path'])
     print("Lookup table path:", arguments['lookup_table'])
     print("Axes order:", arguments['axes_order'])
