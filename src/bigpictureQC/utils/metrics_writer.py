@@ -88,7 +88,7 @@ class ArtifactMetricsWriter:
     """
     Computes quality metrics from artifact segmentation masks and saves them to YAML/JSON.
     """
-    
+
     # Class name mapping
     CLASS_NAMES = {
         0: 'background',
@@ -100,45 +100,45 @@ class ArtifactMetricsWriter:
         6: 'marker',
         7: 'out_of_focus'
     }
-    
+
     # Classes that count as quality issues (exclude ink)
     QUALITY_ISSUE_CLASSES = [2, 4, 5, 6, 7]  # folds, air, dust, marker, focus
-    
+
     def __init__(self, output_format: str = 'yaml'):
         """
         Initialize metrics writer.
-        
+
         Args:
             output_format: Output format ('yaml' or 'json')
         """
         self.output_format = output_format.lower()
         if self.output_format not in ['yaml', 'json']:
             raise ValueError(f"output_format must be 'yaml' or 'json', got '{output_format}'")
-    
+
     def compute_metrics(self, mask: np.ndarray, slide_id: str) -> Dict[str, Any]:
         """
         Compute quality metrics from a segmentation mask.
-        
+
         Args:
             mask: Segmentation mask array with integer labels
             slide_id: Identifier for the slide
-        
+
         Returns:
             Dictionary containing quality metrics
         """
         # Flatten mask for easier computation
         mask_flat = mask.flatten()
-        
+
         # Count pixels per class
         unique, counts = np.unique(mask_flat, return_counts=True)
         class_counts = dict(zip(unique, counts))
-        
+
         # Total pixels excluding background (class 0)
         total_pixels = np.sum([count for cls, count in class_counts.items() if cls != 0])
-        
+
         if total_pixels == 0:
             return self._empty_metrics(slide_id, "No tissue detected (all background)")
-        
+
         # Compute proportions for each artifact class
         proportions = {}
         for cls_id, cls_name in self.CLASS_NAMES.items():
@@ -146,7 +146,7 @@ class ArtifactMetricsWriter:
                 continue
             pixel_count = class_counts.get(cls_id, 0)
             proportions[cls_name] = round(pixel_count / total_pixels, 6)
-        
+
         # All artifact classes (everything except artifact_free class 1)
         artifact_classes = [cls for cls in self.CLASS_NAMES if cls not in (0, 1)]
         artifact_pixels = sum([class_counts.get(cls, 0) for cls in artifact_classes])
@@ -174,9 +174,9 @@ class ArtifactMetricsWriter:
                 'out_of_focus': proportions['out_of_focus']
             }
         }
-        
+
         return metrics
-    
+
     def _empty_metrics(self, slide_id: str, reason: str) -> Dict[str, Any]:
         """Return empty metrics structure when computation fails."""
         return {
@@ -188,16 +188,16 @@ class ArtifactMetricsWriter:
             'total_tissue_pixels': 0,
             'artifact_proportions': {}
         }
-    
+
     def save_metrics(
-        self, 
-        metrics: Dict[str, Any], 
+        self,
+        metrics: Dict[str, Any],
         output_path: str,
         append: bool = True
     ) -> None:
         """
         Save metrics to file, optionally appending to existing data.
-        
+
         Args:
             metrics: Metrics dictionary for a single slide
             output_path: Path to output file
@@ -205,7 +205,7 @@ class ArtifactMetricsWriter:
         """
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        
+
         # Load existing data if appending
         existing_data = {}
         if append and output_path.exists():
@@ -218,11 +218,11 @@ class ArtifactMetricsWriter:
             except Exception as e:
                 print(f"Warning: Could not load existing metrics file: {e}")
                 existing_data = {}
-        
+
         # Update with new metrics (overwrites if slide_id already exists)
         slide_id = metrics['slide_id']
         existing_data[slide_id] = metrics
-        
+
         # Save to file
         # Save to file
         existing_data = _to_builtin(existing_data)
@@ -234,21 +234,21 @@ class ArtifactMetricsWriter:
                 json.dump(existing_data, f, indent=2, sort_keys=False)
 
         print(f"Metrics saved to: {output_path}")
-    
+
     def load_metrics(self, input_path: str) -> Dict[str, Dict[str, Any]]:
         """
         Load metrics from file.
-        
+
         Args:
             input_path: Path to metrics file
-        
+
         Returns:
             Dictionary mapping slide_ids to their metrics
         """
         input_path = Path(input_path)
         if not input_path.exists():
             return {}
-        
+
         with open(input_path, 'r') as f:
             if self.output_format == 'yaml':
                 return yaml.safe_load(f) or {}
@@ -295,7 +295,7 @@ def compute_and_save_metrics(
 
 if __name__ == '__main__':
     import argparse
-    
+
     parser = argparse.ArgumentParser(
         description='Compute quality metrics from artifact segmentation masks'
     )
@@ -317,9 +317,9 @@ if __name__ == '__main__':
         help="Which WSI pyramid level to use for metrics (default: lowest = fastest)."
     )
 
-    
+
     args = parser.parse_args()
-    
+
     metrics = compute_and_save_metrics(
         mask_path=args.mask_path,
         slide_id=args.slide_id,
@@ -327,7 +327,7 @@ if __name__ == '__main__':
         output_format=args.format,
         append=not args.no_append
     )
-    
+
     print(f"\nArtifact proportion: {metrics['artifact_proportion']:.4f}")
     print(f"Quality Score: {metrics['quality_score']:.4f}")
     print(f"Quality Score (excl. ink): {metrics['quality_score_excl_ink']:.4f}")

@@ -56,9 +56,10 @@ def process_single_mask(
         print(f"  Artifact proportion: {metrics['artifact_proportion']:.4f}")
         print(f"  Quality Score: {metrics['quality_score']:.4f}")
         print(f"  Quality Score (excl. ink): {metrics['quality_score_excl_ink']:.4f}")
-        if 'artifact_proportions' in metrics and 'ink' in metrics['artifact_proportions']:
-            print(f"  Ink: {metrics['artifact_proportions']['ink']:.4f}")
         print(f"  Total tissue pixels: {metrics['total_tissue_pixels']:,}")
+        print("  Artifact proportions (fraction of tissue):")
+        for name, value in metrics.get('artifact_proportions', {}).items():
+            print(f"    {name:<13} {value:.4f}")
     
     return metrics
 
