@@ -1,0 +1,13 @@
+# Keep the build context small. Weights are never part of the image:
+# they are mounted at runtime (see README).
+.git
+weights/
+**/__pycache__
+**/*.py[cod]
+**/.ipynb_checkpoints
+*.tar
+*.tar.gz
+wandb/
+outputs/
+*.log
+figures/

@@ -1,5 +1,5 @@
 ARG UBUNTU_VERSION=22.04
-ARG CUDA_MAJOR_VERSION=11.8.0
+ARG CUDA_MAJOR_VERSION=12.1.0
 ARG CUDNN_MAJOR_VERSION=8
 FROM nvidia/cuda:${CUDA_MAJOR_VERSION}-cudnn${CUDNN_MAJOR_VERSION}-runtime-ubuntu${UBUNTU_VERSION} AS base
 ARG PYTHON_VERSION=3.11.3
@@ -48,6 +48,8 @@ RUN curl -L ${ASAP_URL} -o /tmp/ASAP.deb && apt-get install --assume-yes /tmp/AS
 
 # Install the required Python packages
 COPY requirements.txt /tmp/
+# Install torch first from the cu121 index so the sm_90 kernel is included
+RUN pip3 install torch==2.1.0 --index-url https://download.pytorch.org/whl/cu121
 RUN pip3 install -r /tmp/requirements.txt
 # download the autofix tool
 RUN pip3 install opencv-fixer==0.2.5
@@ -60,25 +62,25 @@ WORKDIR /home/user/
 RUN chown --recursive user:user /home/user/
 USER user
 
-# Copy the code and model weights
+# Copy the code
 COPY --chown=user external/pathology-common /home/user/source/pathology-common
 COPY --chown=user external/diag-models /home/user/source/diag-models
 COPY --chown=user external/pathology-fast-inference /home/user/source/pathology-fast-inference
 COPY --chown=user external/pathology-whole-slide-data /home/user/source/pathology-whole-slide-data
 
-# Copy main source code 
+# Copy main source code
 COPY --chown=user src/bigpictureQC /home/user/source/bigpictureQC
 
 # Copy configuration files
 COPY --chown=user config /home/user/config/
 
 # Model weights are NOT bundled in the image.
-# Download them from Zenodo (see README) and mount at runtime:
+# Download them from Zenodo (see README) and mount the folder at runtime:
 #   docker run ... -v /path/to/weights:/home/user/weights ...
 RUN mkdir -p /home/user/weights
 
 # Add ASAP and all source directories to Python path
-ENV PYTHONPATH=/opt/ASAP/bin/:/home/user/source:/home/user/source/pathology-common:/home/user/source/diag-models:/home/user/source/pathology-fast-inference:/home/user/source/pathology-whole-slide-data:${PYTHONPATH:-}
+ENV PYTHONPATH=/opt/ASAP/bin/:/home/user/source:/home/user/source/pathology-common:/home/user/source/diag-models:/home/user/source/pathology-fast-inference:/home/user/source/pathology-whole-slide-data
 
 # Set the entry point for the container
 COPY --chown=user scripts/run_inference.sh /home/user/run_inference.sh

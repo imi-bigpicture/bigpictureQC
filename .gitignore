@@ -1,5 +1,6 @@
-# Model weights (distributed via Zenodo)
-weights/
+# Model weights (distributed via Zenodo); keep the empty folder
+weights/*
+!weights/.gitkeep
 
 # Python
 __pycache__/
@@ -33,3 +34,7 @@ Thumbs.db
 wandb/
 outputs/
 *.log
+
+# Saved Docker images / archives
+*.tar
+*.tar.gz
