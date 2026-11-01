@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import skimage.io
 from torch.utils.data import Dataset
-from utils.labels import class_labels
+from bigpictureQC.utils.labels import class_labels
 from typing import Optional, List, Tuple, Any
 
 class NormalizationStrategy:

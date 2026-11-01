@@ -5,9 +5,10 @@ import argparse
 from pathlib import Path
 from typing import Optional
 
-# Fix import path issues
-PROJECT_ROOT = Path(__file__).resolve().parent
-sys.path.insert(0, str(PROJECT_ROOT / "src"))
+# Make the bigpictureQC package importable when running this file directly
+# (python src/bigpictureQC/train.py ...): add the src/ folder to the path.
+SRC_DIR = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(SRC_DIR))
 
 from bigpictureQC.utils.config import Config
 from bigpictureQC.utils.common import seed_everything
