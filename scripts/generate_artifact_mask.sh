@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-for v in INPUT_PATH TB_OUTPUT ART_OUTPUT MODE DICOM INPUT_FILTER POSTPROCESS USE_TTA; do
+for v in INPUT_PATH TB_OUTPUT ART_OUTPUT MODE DICOM INPUT_FILTER POSTPROCESS USE_TTA TB_SUFFIX; do
   if [[ -z "${!v:-}" ]]; then
     echo "[ART] ERROR: $v must be set by run_inference.sh" >&2
     exit 1
   fi
 done
 
-MODEL_PATH="/home/user/weights/artifact_network_unet++_efficientnetb2.pth"
+MODEL_PATH="/home/user/weights/artifact_network_unetplusplus_efficientnetb2.pth"
 
 if [[ "$MODE" == "folder" ]]; then
   mkdir -p "$ART_OUTPUT"
@@ -37,14 +37,21 @@ if [[ "$USE_TTA" == "1" ]]; then
   USE_TTA_ARG=(--use_tta)
 fi
 
-echo "[ART] MODE        = $MODE"
-echo "[ART] INPUT_PATH  = $INPUT_PATH"
-echo "[ART] OUTPUT_PATH = $OUTPUT_PATH"
-echo "[ART] MASK_PATH   = $MASK_PATH"
-echo "[ART] MODEL       = $MODEL_PATH"
-echo "[ART] DICOM       = $DICOM"
-echo "[ART] POSTPROCESS = $POSTPROCESS"
-echo "[ART] USE_TTA     = $USE_TTA"
+RECURSIVE_ARG=()
+if [[ "$MODE" == "folder" && "${RECURSIVE:-0}" == "1" ]]; then
+  RECURSIVE_ARG=(--recursive)
+fi
+
+echo "[ART] MODE              = $MODE"
+echo "[ART] INPUT_PATH        = $INPUT_PATH"
+echo "[ART] OUTPUT_PATH       = $OUTPUT_PATH"
+echo "[ART] MASK_PATH         = $MASK_PATH"
+echo "[ART] MODEL             = $MODEL_PATH"
+echo "[ART] DICOM             = $DICOM"
+echo "[ART] POSTPROCESS       = $POSTPROCESS"
+echo "[ART] USE_TTA           = $USE_TTA"
+echo "[ART] RECURSIVE         = ${RECURSIVE:-0}"
+echo "[ART] SPACING_TOLERANCE = ${SPACING_TOLERANCE:-0.25}"
 
 MASK_CLASS=""
 
@@ -60,13 +67,14 @@ else
   MASK_CLASS="$(/usr/local/bin/python3 /home/user/scripts/detect_mask_class.py --mask "$TB_OUTPUT")"
 fi
 
-echo "[ART] MASK_CLASS  = $MASK_CLASS"
+echo "[ART] MASK_CLASS        = $MASK_CLASS"
 
 /usr/local/bin/python3 /home/user/source/pathology-fast-inference/scripts/applynetwork_multiproc.py \
   --input_wsi_path="$INPUT_PATH" \
   --spacing_tolerance="${SPACING_TOLERANCE:-0.25}" \
   "${FILTER_ARG[@]}" \
   "${DICOM_ARG[@]}" \
+  "${RECURSIVE_ARG[@]}" \
   --mask_wsi_path="$MASK_PATH" \
   --output_wsi_path="$OUTPUT_PATH" \
   --model_path="$MODEL_PATH" \

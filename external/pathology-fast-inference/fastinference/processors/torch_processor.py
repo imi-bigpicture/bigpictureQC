@@ -1,4 +1,5 @@
-import numpy as np 
+import os
+import numpy as np
 import torch
 import torch.nn as nn
 from importlib import import_module
@@ -27,7 +28,11 @@ class torch_processor(async_tile_processor):
 
     def _load_network_model(self):
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        config_path = self._model_path.split("_epoch")[0].split("_best")[0] + '.yaml'
+        # The model configuration YAML sits next to the weights and shares their base name,
+        # e.g. tissue_network_unet_mobilenetv2.pth -> tissue_network_unet_mobilenetv2.yaml.
+        # Suffixes such as "_best_model" or "_epoch<N>" are stripped for older checkpoint names.
+        base_path = os.path.splitext(self._model_path)[0]
+        config_path = base_path.split("_epoch")[0].split("_best")[0] + '.yaml'
         print("Device: ", device)
         model_parameters, sampler_parameters, training_parameters = self.get_config_from_yaml(config_path)
         n_classes = len(np.unique(list(sampler_parameters['training']['label_map'].values())))

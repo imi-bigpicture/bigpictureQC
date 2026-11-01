@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-for v in INPUT_PATH TB_OUTPUT MODE DICOM INPUT_FILTER; do
+for v in INPUT_PATH TB_OUTPUT MODE DICOM INPUT_FILTER TB_SUFFIX; do
   if [[ -z "${!v:-}" ]]; then
     echo "[TB] ERROR: $v must be set by run_inference.sh" >&2
     exit 1
   fi
 done
 
-MODEL_PATH="/home/user/weights/playground_soft-cloud-137_best_model.pth"
+MODEL_PATH="/home/user/weights/tissue_network_unet_mobilenetv2.pth"
 
 if [[ "$MODE" == "folder" ]]; then
   mkdir -p "$TB_OUTPUT"
